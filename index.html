@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Valea Doftanei • Forest Memory</title>
+  <meta name="theme-color" content="#0b2a1a" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="bg">
+    <div class="grain"></div>
+    <div class="leaves" aria-hidden="true"></div>
+  </div>
+
+  <main class="app" role="application" aria-label="Forest Memory Game">
+    <header class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🌲</div>
+        <div class="title">
+          <div class="kicker">Valea Doftanei</div>
+          <h1>Forest Memory</h1>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="btnHow" type="button">Cum se joacă</button>
+        <button class="btn ghost" id="btnShare" type="button">Share</button>
+      </div>
+    </header>
+
+    <section class="card panel">
+      <div class="panelRow">
+        <div class="pill">
+          <span class="label">Nivel</span>
+          <span class="value" id="difficultyLabel">Ușor</span>
+        </div>
+        <div class="pill">
+          <span class="label">Timp</span>
+          <span class="value"><span id="time">00:00</span></span>
+        </div>
+        <div class="pill">
+          <span class="label">Mișcări</span>
+          <span class="value" id="moves">0</span>
+        </div>
+        <div class="pill best">
+          <span class="label">Best</span>
+          <span class="value" id="best">—</span>
+        </div>
+      </div>
+
+      <div class="levelMap" aria-label="Alege nivelul">
+        <button class="levelBtn active" data-difficulty="easy" type="button">
+          <span class="lvlName">Ușor</span>
+          <span class="lvlMeta">6 perechi</span>
+          <span class="medal" id="medal-easy">—</span>
+        </button>
+        <button class="levelBtn" data-difficulty="medium" type="button">
+          <span class="lvlName">Mediu</span>
+          <span class="lvlMeta">8 perechi</span>
+          <span class="medal" id="medal-medium">—</span>
+        </button>
+        <button class="levelBtn" data-difficulty="hard" type="button">
+          <span class="lvlName">Greu</span>
+          <span class="lvlMeta">10 perechi</span>
+          <span class="medal" id="medal-hard">—</span>
+        </button>
+      </div>
+
+      <div class="ctaRow">
+        <button class="btn primary" id="btnNew" type="button">Joc nou</button>
+        <button class="btn" id="btnResetBest" type="button">Reset best</button>
+      </div>
+    </section>
+
+    <section class="card boardWrap">
+      <div class="boardHeader">
+        <div class="note" id="note">
+          Pentru Ioana: “Când vezi un brad mișto, fă-i cu ochiul.” 😉🌲
+        </div>
+        <div class="progress" aria-label="Progres">
+          <span id="found">0</span>/<span id="total">0</span> perechi
+        </div>
+      </div>
+
+      <div class="board" id="board" aria-label="Tabla de joc"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="hint">
+        Tip: pe telefon, joacă în portret. E făcut să încapă “clean” 📱✨
+      </div>
+    </footer>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Cum se joacă</h2>
+      <p>
+        Întoarce 2 cărți. Dacă sunt identice, rămân deschise.
+        Scopul: găsești toate perechile cât mai repede (și cu cât mai puține mișcări).
+      </p>
+      <ul>
+        <li>Ușor: 6 perechi</li>
+        <li>Mediu: 8 perechi</li>
+        <li>Greu: 10 perechi</li>
+      </ul>
+      <p class="small">
+        Best time + medalii se salvează pe device (localStorage).
+      </p>
+      <div class="modalRow">
+        <button class="btn primary" id="btnCloseModal" type="button">Am înțeles</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
