@@ -5,7 +5,385 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Valea Doftanei • Forest Memory</title>
   <meta name="theme-color" content="#0b2a1a" />
-  <link rel="stylesheet" href="./style.css" />
+  <style>
+    :root{
+      --bg0:#071a12;
+      --bg1:#0b2a1a;
+      --card: rgba(255,255,255,.06);
+      --line: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --accent: #33d17a;
+      --accent2:#4cc9f0;
+      --gold:#ffd166;
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
+      --r: 22px;
+      --safeT: env(safe-area-inset-top, 0px);
+      --safeB: env(safe-area-inset-bottom, 0px);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
+      background: radial-gradient(1200px 900px at 30% 0%, #0f3a25 0%, var(--bg1) 40%, var(--bg0) 100%);
+      overflow-x:hidden;
+    }
+
+    .bg{ position:fixed; inset:0; z-index:-1; }
+    .grain{
+      position:absolute; inset:-20%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      opacity:.10;
+      mix-blend-mode: overlay;
+      transform: rotate(2deg);
+    }
+    .leaves{
+      position:absolute; inset:0;
+      pointer-events:none;
+      opacity:.55;
+      background:
+        radial-gradient(18px 12px at 14% 18%, rgba(51,209,122,.20) 0, transparent 70%),
+        radial-gradient(22px 14px at 72% 22%, rgba(76,201,240,.18) 0, transparent 70%),
+        radial-gradient(16px 10px at 32% 68%, rgba(255,209,102,.12) 0, transparent 70%),
+        radial-gradient(28px 18px at 84% 72%, rgba(51,209,122,.16) 0, transparent 70%);
+      animation: floaty 9s ease-in-out infinite;
+    }
+    @keyframes floaty{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(0,-10px,0); }
+    }
+
+    .app{
+      min-height: 100dvh;
+      padding: calc(14px + var(--safeT)) 14px calc(14px + var(--safeB));
+      max-width: 980px;
+      margin: 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: var(--r);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .brand{ display:flex; align-items:center; gap: 10px; }
+    .logo{
+      width: 40px; height: 40px;
+      display:grid; place-items:center;
+      border-radius: 14px;
+      background: rgba(51,209,122,.14);
+      border: 1px solid rgba(51,209,122,.22);
+      box-shadow: var(--shadow);
+      font-size: 20px;
+    }
+    .title .kicker{
+      font-size: 12px;
+      letter-spacing:.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .title h1{
+      margin:0;
+      font-size: clamp(16px, 3.6vw, 22px);
+      line-height:1.05;
+    }
+    .actions{ display:flex; gap: 8px; align-items:center; }
+
+    .card{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel{ padding: 12px; }
+    .panelRow{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .pill{
+      padding: 10px 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+    }
+    .pill .label{ display:block; font-size: 11px; color: var(--muted); letter-spacing:.04em; }
+    .pill .value{ display:block; font-size: clamp(14px, 3.2vw, 18px); font-weight: 800; }
+    .pill.best{ border-color: rgba(255,209,102,.22); background: rgba(255,209,102,.08); }
+
+    .levelMap{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .levelBtn{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.14);
+      border-radius: 18px;
+      padding: 10px;
+      color: var(--text);
+      text-align:left;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .levelBtn:hover{ transform: translateY(-1px); border-color: rgba(51,209,122,.30); }
+    .levelBtn.active{
+      border-color: rgba(51,209,122,.42);
+      background: rgba(51,209,122,.10);
+    }
+    .lvlName{ display:block; font-weight: 900; font-size: 14px; }
+    .lvlMeta{ display:block; font-size: 12px; color: var(--muted); margin-top:2px; }
+    .medal{ display:block; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,.82); }
+
+    .ctaRow{ display:flex; gap: 10px; flex-wrap:wrap; }
+
+    .btn{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 16px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 14px;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      touch-action: manipulation;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(51,209,122,.90), rgba(76,201,240,.65));
+      border-color: rgba(255,255,255,.18);
+      color: rgba(0,0,0,.88);
+    }
+    .btn.ghost{
+      background: transparent;
+      border-color: rgba(255,255,255,.16);
+    }
+
+    /* Toggle */
+    .toggle{
+      display:flex; align-items:center; gap:10px;
+      padding: 8px 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.14);
+      font-weight: 800;
+    }
+    .switch{
+      width: 44px; height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .knob{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      position:absolute; top: 50%; left: 3px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.86);
+      transition: left .14s ease, background .14s ease;
+    }
+    .toggle.on .switch{ background: rgba(51,209,122,.18); border-color: rgba(51,209,122,.28); }
+    .toggle.on .knob{ left: 21px; background: rgba(255,209,102,.90); }
+
+    .dailyWrap{ padding: 12px; }
+    .daily{
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+      border-radius: 18px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+    }
+    .dailyLeft{ display:flex; gap:10px; align-items:flex-start; }
+    .dailyIcon{
+      width: 40px; height: 40px;
+      display:grid; place-items:center;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(51,209,122,.10);
+      font-size: 18px;
+    }
+    .dailyText .t1{ font-size: 12px; color: var(--muted); letter-spacing:.05em; text-transform:uppercase; }
+    .dailyText .t2{ font-size: 14px; font-weight: 900; margin-top:2px; }
+    .dailyText .t3{ font-size: 13px; color: rgba(255,255,255,.86); margin-top:6px; line-height:1.35; }
+
+    .boardWrap{ padding: 12px; }
+    .boardHeader{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .note{
+      font-size: 13px;
+      color: rgba(255,255,255,.86);
+      padding: 8px 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      max-width: 70%;
+    }
+    .progress{ font-weight: 900; color: rgba(255,255,255,.88); }
+
+    .board{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    /* Flip card hardened for iOS/Safari */
+    .tile{
+      position:relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      overflow:hidden;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+
+      perspective: 900px;
+      -webkit-perspective: 900px;
+    }
+    .tileInner{
+      position:absolute; inset:0;
+      transition: transform .22s ease;
+      transform: rotateY(0deg);
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+    }
+    .face{
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      border-radius: 20px;
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .back{
+      font-size: clamp(18px, 5vw, 28px);
+      color: rgba(255,255,255,.85);
+      background:
+        radial-gradient(80px 80px at 30% 20%, rgba(51,209,122,.18), transparent 55%),
+        radial-gradient(80px 80px at 70% 80%, rgba(76,201,240,.14), transparent 55%),
+        rgba(0,0,0,.18);
+      transform: rotateY(0deg) translateZ(1px);
+    }
+    .front{
+      transform: rotateY(180deg) translateZ(1px);
+      font-size: clamp(22px, 6vw, 34px);
+    }
+    .tile.flipped .tileInner{ transform: rotateY(180deg); }
+    .tile.matched{
+      border-color: rgba(255,209,102,.40);
+      box-shadow: 0 0 0 2px rgba(255,209,102,.14) inset, var(--shadow);
+    }
+
+    .photoWrap{ padding: 12px; }
+    .photoRow{ display:flex; gap: 10px; flex-wrap:wrap; align-items:center; }
+    .album{
+      margin-top: 10px;
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .thumb{
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      cursor:pointer;
+      position:relative;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .thumb .x{
+      position:absolute; top:6px; right:6px;
+      width: 22px; height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.40);
+      display:grid; place-items:center;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .emptyAlbum{
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer{
+      opacity:.85;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 2px 6px;
+    }
+
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.55);
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal.open{ display:grid; }
+    .modalCard{
+      width:min(640px, 100%);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,20,15,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .modalCard h2{ margin: 6px 0 8px; }
+    .modalCard p, .modalCard li{ color: rgba(255,255,255,.86); }
+    .modalCard .small{ color: var(--muted); font-size: 12px; }
+    .modalRow{ display:flex; justify-content:flex-end; gap:10px; margin-top: 10px; flex-wrap:wrap; }
+
+    .previewImg{
+      width: 100%;
+      max-height: 55vh;
+      object-fit: contain;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+    }
+
+    @media (max-width: 520px){
+      .panelRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .levelMap{ grid-template-columns: 1fr; }
+      .board{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .album{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .note{ max-width: 68%; font-size: 12px; }
+      .logo{ width: 36px; height: 36px; border-radius: 14px; }
+      .top{ padding: 8px 10px; }
+      .btn{ padding: 10px 12px; }
+    }
+  </style>
 </head>
 <body>
   <div class="bg">
@@ -28,6 +406,23 @@
         <button class="btn ghost" id="btnShare" type="button">Share</button>
       </div>
     </header>
+
+    <!-- Daily Forest Card -->
+    <section class="card dailyWrap" aria-label="Daily forest card">
+      <div class="daily">
+        <div class="dailyLeft">
+          <div class="dailyIcon" id="dailyIcon" aria-hidden="true">🌲</div>
+          <div class="dailyText">
+            <div class="t1" id="dailyDate">Azi</div>
+            <div class="t2" id="dailyTitle">Biletul zilei</div>
+            <div class="t3" id="dailyMsg">...</div>
+          </div>
+        </div>
+        <div>
+          <button class="btn" id="btnDailyCopy" type="button">Copy</button>
+        </div>
+      </div>
+    </section>
 
     <section class="card panel">
       <div class="panelRow">
@@ -70,7 +465,27 @@
       <div class="ctaRow">
         <button class="btn primary" id="btnNew" type="button">Joc nou</button>
         <button class="btn" id="btnResetBest" type="button">Reset best</button>
+
+        <button class="toggle" id="soundToggle" type="button" aria-pressed="false" title="Sunete discrete">
+          <span>🔊 Sunet</span>
+          <span class="switch" aria-hidden="true"><span class="knob"></span></span>
+        </button>
       </div>
+    </section>
+
+    <!-- Photo Challenge -->
+    <section class="card photoWrap" aria-label="Photo challenge">
+      <div class="photoRow">
+        <button class="btn primary" id="btnPhoto" type="button">📸 Photo challenge</button>
+        <button class="btn" id="btnClearAlbum" type="button">Șterge album</button>
+        <span class="pill" style="padding:8px 10px;">
+          <span class="label">Album</span>
+          <span class="value"><span id="photoCount">0</span>/12</span>
+        </span>
+      </div>
+      <input id="photoInput" type="file" accept="image/*" capture="environment" hidden />
+      <div class="emptyAlbum" id="emptyAlbum">Fă o poză cu un brad / plantă preferată și păstreaz-o aici 🌲</div>
+      <div class="album" id="album"></div>
     </section>
 
     <section class="card boardWrap">
@@ -87,16 +502,14 @@
     </section>
 
     <footer class="footer">
-      <div class="hint">
-        Tip: pe telefon, joacă în portret. E făcut să încapă “clean” 📱✨
-      </div>
+      Tip: pe telefon, joacă în portret. E făcut să încapă “clean” 📱✨
     </footer>
   </main>
 
-  <!-- Modal -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <h2 id="modalTitle">Cum se joacă</h2>
+  <!-- Modal: How -->
+  <div class="modal" id="modalHow" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalHowTitle">
+      <h2 id="modalHowTitle">Cum se joacă</h2>
       <p>
         Întoarce 2 cărți. Dacă sunt identice, rămân deschise.
         Scopul: găsești toate perechile cât mai repede (și cu cât mai puține mișcări).
@@ -106,15 +519,622 @@
         <li>Mediu: 8 perechi</li>
         <li>Greu: 10 perechi</li>
       </ul>
-      <p class="small">
-        Best time + medalii se salvează pe device (localStorage).
-      </p>
+      <p class="small">Best time + medalii + album se salvează local pe device.</p>
       <div class="modalRow">
-        <button class="btn primary" id="btnCloseModal" type="button">Am înțeles</button>
+        <button class="btn primary" id="btnCloseHow" type="button">Am înțeles</button>
       </div>
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <!-- Modal: Photo preview -->
+  <div class="modal" id="modalPhoto" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+      <h2 id="modalPhotoTitle">📸 Photo</h2>
+      <img id="previewImg" class="previewImg" alt="Preview" />
+      <div class="modalRow">
+        <button class="btn" id="btnDownloadImg" type="button">Download</button>
+        <button class="btn primary" id="btnClosePhoto" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    const $ = (s) => document.querySelector(s);
+
+    // UI
+    const boardEl = $("#board");
+    const timeEl = $("#time");
+    const movesEl = $("#moves");
+    const bestEl = $("#best");
+    const foundEl = $("#found");
+    const totalEl = $("#total");
+    const difficultyLabelEl = $("#difficultyLabel");
+
+    const btnNew = $("#btnNew");
+    const btnHow = $("#btnHow");
+    const btnShare = $("#btnShare");
+    const btnResetBest = $("#btnResetBest");
+
+    const modalHow = $("#modalHow");
+    const btnCloseHow = $("#btnCloseHow");
+
+    const medalEasy = $("#medal-easy");
+    const medalMedium = $("#medal-medium");
+    const medalHard = $("#medal-hard");
+
+    const levelBtns = Array.from(document.querySelectorAll(".levelBtn"));
+
+    // Daily card
+    const dailyIconEl = $("#dailyIcon");
+    const dailyDateEl = $("#dailyDate");
+    const dailyMsgEl = $("#dailyMsg");
+    const btnDailyCopy = $("#btnDailyCopy");
+
+    // Photo
+    const btnPhoto = $("#btnPhoto");
+    const btnClearAlbum = $("#btnClearAlbum");
+    const photoInput = $("#photoInput");
+    const albumEl = $("#album");
+    const emptyAlbumEl = $("#emptyAlbum");
+    const photoCountEl = $("#photoCount");
+
+    const modalPhoto = $("#modalPhoto");
+    const previewImg = $("#previewImg");
+    const btnClosePhoto = $("#btnClosePhoto");
+    const btnDownloadImg = $("#btnDownloadImg");
+
+    // Sound
+    const soundToggle = $("#soundToggle");
+
+    // Game content: brazi & plante in prim-plan
+    const ICONS = [
+      { key: "brad", emoji: "🌲", name: "Brad" },
+      { key: "brad2", emoji: "🎄", name: "Brad (decor)" },
+      { key: "planta", emoji: "🌿", name: "Plantă" },
+      { key: "frunza", emoji: "🍃", name: "Frunză" },
+      { key: "ciuperca", emoji: "🍄", name: "Ciupercă" },
+      { key: "floare", emoji: "🌼", name: "Floare" },
+      { key: "castan", emoji: "🌰", name: "Castan" },
+      { key: "munte", emoji: "⛰️", name: "Munte" },
+      { key: "picatura", emoji: "💧", name: "Apă" },
+      { key: "pasare", emoji: "🐦", name: "Pasăre" },
+      { key: "stea", emoji: "✨", name: "Sclipici" },
+      { key: "luna", emoji: "🌙", name: "Lună" },
+      { key: "foc", emoji: "🔥", name: "Foc" },
+    ];
+
+    const DIFFICULTIES = {
+      easy:   { pairs: 6, label: "Ușor",  colsDesktop: 4, colsMobile: 3, medal: { gold: 45, silver: 70, bronze: 95 } },
+      medium: { pairs: 8, label: "Mediu", colsDesktop: 4, colsMobile: 3, medal: { gold: 75, silver: 110, bronze: 150 } },
+      hard:   { pairs:10, label: "Greu",  colsDesktop: 5, colsMobile: 3, medal: { gold: 110, silver: 165, bronze: 220 } },
+    };
+
+    // Daily messages (romantico-nerdy)
+    const DAILY = [
+      { icon: "🌲", msg: "Azi, regula e simplă: găsești cel mai frumos brad și-i dai un nume de NPC." },
+      { icon: "🌿", msg: "Observă 3 nuanțe diferite de verde. Creierul tău zice ‘mulțumesc’ în tăcere." },
+      { icon: "🍄", msg: "Quest: găsește o ciupercă (doar cu ochii, nu cu tigaia 😄)." },
+      { icon: "💧", msg: "Respiră ca după o urcare: 4 secunde inspir, 6 secunde expir. Repeat x5." },
+      { icon: "⛰️", msg: "Notează mental: ‘muntele nu se grăbește’. Apoi trișează și bucură-te." },
+      { icon: "✨", msg: "Trimite o poză cu ceva ‘mic și perfect’ (o frunză, un mugur, o rază)." },
+      { icon: "🌙", msg: "Seara: caută luna 10 secunde. Științific: îți resetează ‘vibe-ul’." },
+      { icon: "🐦", msg: "Ascultă 20 secunde fără să ‘numești’ sunetele. Doar le lași să fie." },
+      { icon: "🔥", msg: "Dacă prinzi un foc / sobă: 1 minut de ‘stare’. Zero gânduri, doar flăcări." },
+    ];
+
+    // Local storage keys
+    const K = {
+      best: (d) => `forest_best_${d}`,
+      medal: (d) => `forest_medal_${d}`,
+      sound: `forest_sound_enabled`,
+      album: `forest_album_v1`,
+    };
+
+    // Helpers
+    const shuffle = (arr) => {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const formatTime = (sec) => `${pad2(Math.floor(sec/60))}:${pad2(sec%60)}`;
+    const nowMs = () => Date.now();
+
+    // Sound (Web Audio, no external files)
+    let audioCtx = null;
+    let soundEnabled = (localStorage.getItem(K.sound) ?? "1") === "1";
+
+    function ensureAudio(){
+      if (!soundEnabled) return;
+      if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+    function beep(freq=440, dur=0.06, type="sine", gain=0.03){
+      if (!soundEnabled) return;
+      ensureAudio();
+      if (!audioCtx) return;
+
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.value = gain;
+
+      o.connect(g);
+      g.connect(audioCtx.destination);
+
+      const t0 = audioCtx.currentTime;
+      g.gain.setValueAtTime(gain, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+      o.start(t0);
+      o.stop(t0 + dur);
+    }
+    function winChime(){
+      if (!soundEnabled) return;
+      beep(523, 0.07, "triangle", 0.04);
+      setTimeout(()=>beep(659, 0.07, "triangle", 0.04), 90);
+      setTimeout(()=>beep(784, 0.09, "triangle", 0.04), 180);
+    }
+
+    function renderSoundToggle(){
+      soundToggle.classList.toggle("on", soundEnabled);
+      soundToggle.setAttribute("aria-pressed", soundEnabled ? "true" : "false");
+    }
+
+    // Game state
+    let state = {
+      difficulty: "easy",
+      tiles: [],
+      flipped: [],
+      matchedCount: 0,
+      moves: 0,
+      startedAt: null,
+      timerId: null,
+      locked: false,
+    };
+
+    function loadBest(d){
+      const v = Number(localStorage.getItem(K.best(d)));
+      return Number.isFinite(v) && v > 0 ? v : null;
+    }
+    function saveBest(d, sec){ localStorage.setItem(K.best(d), String(sec)); }
+    function loadMedal(d){ return localStorage.getItem(K.medal(d)) || "—"; }
+    function saveMedal(d, medal){ localStorage.setItem(K.medal(d), medal); }
+
+    function medalForTime(d, sec){
+      const t = DIFFICULTIES[d].medal;
+      if (sec <= t.gold) return "🥇 Aur";
+      if (sec <= t.silver) return "🥈 Argint";
+      if (sec <= t.bronze) return "🥉 Bronz";
+      return "🌿 Practică";
+    }
+
+    function setBoardColumns(){
+      const isMobile = window.matchMedia("(max-width: 520px)").matches;
+      const d = DIFFICULTIES[state.difficulty];
+      const cols = isMobile ? d.colsMobile : d.colsDesktop;
+      boardEl.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    }
+
+    function resetTimer(){
+      if (state.timerId) clearInterval(state.timerId);
+      state.timerId = null;
+      state.startedAt = null;
+      timeEl.textContent = "00:00";
+    }
+
+    function startTimerIfNeeded(){
+      if (state.startedAt) return;
+      state.startedAt = nowMs();
+      state.timerId = setInterval(() => {
+        const sec = Math.floor((nowMs() - state.startedAt) / 1000);
+        timeEl.textContent = formatTime(sec);
+      }, 250);
+    }
+
+    function stopTimer(){
+      if (!state.startedAt) return 0;
+      const sec = Math.floor((nowMs() - state.startedAt) / 1000);
+      if (state.timerId) clearInterval(state.timerId);
+      state.timerId = null;
+      return sec;
+    }
+
+    function buildTiles(){
+      const pairs = DIFFICULTIES[state.difficulty].pairs;
+      const pick = shuffle(ICONS).slice(0, pairs);
+      const doubled = shuffle([...pick, ...pick].map((x, idx) => ({
+        id: `${x.key}_${idx}`,
+        key: x.key,
+        emoji: x.emoji,
+        name: x.name
+      })));
+
+      state.tiles = doubled;
+      state.flipped = [];
+      state.matchedCount = 0;
+      state.moves = 0;
+      state.locked = false;
+
+      movesEl.textContent = "0";
+      foundEl.textContent = "0";
+      totalEl.textContent = String(pairs);
+    }
+
+    function tileTemplate(tile){
+      return `
+        <button class="tile" data-id="${tile.id}" data-key="${tile.key}" aria-label="Carte">
+          <div class="tileInner">
+            <div class="face back">🍀</div>
+            <div class="face front" aria-hidden="true">${tile.emoji}</div>
+          </div>
+        </button>
+      `;
+    }
+
+    function renderBoard(){
+      boardEl.innerHTML = state.tiles.map(tileTemplate).join("");
+    }
+
+    function getTileElById(id){
+      // id-urile sunt simple (key_idx) => selector sigur fără CSS.escape
+      return boardEl.querySelector(`.tile[data-id="${id}"]`);
+    }
+
+    function renderMeta(){
+      const d = state.difficulty;
+      difficultyLabelEl.textContent = DIFFICULTIES[d].label;
+      const best = loadBest(d);
+      bestEl.textContent = best ? formatTime(best) : "—";
+      medalEasy.textContent = loadMedal("easy");
+      medalMedium.textContent = loadMedal("medium");
+      medalHard.textContent = loadMedal("hard");
+    }
+
+    function flipUp(tileEl){
+      tileEl.classList.add("flipped");
+      tileEl.setAttribute("aria-label", "Carte întoarsă");
+    }
+    function flipDown(tileEl){
+      tileEl.classList.remove("flipped");
+      tileEl.setAttribute("aria-label", "Carte");
+    }
+    function markMatched(tileEl){
+      tileEl.classList.add("matched");
+      tileEl.setAttribute("aria-label", "Pereche găsită");
+    }
+
+    function bumpWin(){
+      document.documentElement.animate(
+        [{ filter: "brightness(1)" }, { filter: "brightness(1.08)" }, { filter: "brightness(1)" }],
+        { duration: 420, easing: "ease-out" }
+      );
+    }
+
+    function onWin(seconds){
+      const d = state.difficulty;
+      const prevBest = loadBest(d);
+      const isNewBest = !prevBest || seconds < prevBest;
+
+      const medal = medalForTime(d, seconds);
+      saveMedal(d, medal);
+      if (isNewBest) saveBest(d, seconds);
+
+      renderMeta();
+      winChime();
+
+      const msg = [
+        `Bravo! Ai terminat "${DIFFICULTIES[d].label}" în ${formatTime(seconds)}.`,
+        isNewBest ? `New Best! 🏆` : `Best-ul rămâne ${formatTime(prevBest)}.`,
+        `Medalie: ${medal}`
+      ].join("\n");
+
+      setTimeout(() => alert(msg), 80);
+    }
+
+    function onTileClick(e){
+      const btn = e.target.closest(".tile");
+      if (!btn) return;
+      if (state.locked) return;
+
+      ensureAudio(); // first gesture unlock for audio (if enabled)
+
+      if (btn.classList.contains("flipped") || btn.classList.contains("matched")) return;
+
+      startTimerIfNeeded();
+      flipUp(btn);
+      beep(320, 0.05, "sine", 0.02);
+
+      state.flipped.push({ id: btn.dataset.id, key: btn.dataset.key });
+
+      if (state.flipped.length < 2) return;
+
+      state.moves += 1;
+      movesEl.textContent = String(state.moves);
+
+      const [a,b] = state.flipped;
+      state.locked = true;
+
+      const aEl = getTileElById(a.id);
+      const bEl = getTileElById(b.id);
+
+      if (a.key === b.key){
+        setTimeout(() => {
+          markMatched(aEl);
+          markMatched(bEl);
+          beep(640, 0.07, "triangle", 0.03);
+
+          state.matchedCount += 1;
+          foundEl.textContent = String(state.matchedCount);
+          state.flipped = [];
+          state.locked = false;
+
+          const pairs = DIFFICULTIES[state.difficulty].pairs;
+          if (state.matchedCount >= pairs){
+            const seconds = stopTimer();
+            bumpWin();
+            onWin(seconds);
+          }
+        }, 220);
+      } else {
+        setTimeout(() => {
+          beep(220, 0.06, "sine", 0.02);
+          flipDown(aEl);
+          flipDown(bEl);
+          state.flipped = [];
+          state.locked = false;
+        }, 520);
+      }
+    }
+
+    function newGame(){
+      resetTimer();
+      buildTiles();
+      renderBoard();
+      renderMeta();
+      setBoardColumns();
+    }
+
+    function setDifficulty(d){
+      if (!DIFFICULTIES[d]) return;
+      state.difficulty = d;
+      levelBtns.forEach(b => b.classList.toggle("active", b.dataset.difficulty === d));
+      newGame();
+    }
+
+    function resetBest(){
+      const d = state.difficulty;
+      localStorage.removeItem(K.best(d));
+      localStorage.removeItem(K.medal(d));
+      renderMeta();
+      alert(`Resetat best + medalie pentru "${DIFFICULTIES[d].label}".`);
+    }
+
+    async function share(){
+      const d = state.difficulty;
+      const best = loadBest(d);
+      const medal = loadMedal(d);
+      const daily = dailyMsgEl.textContent.trim();
+
+      const text =
+`Forest Memory (Valea Doftanei) 🌲
+Nivel: ${DIFFICULTIES[d].label}
+Best: ${best ? formatTime(best) : "—"} • Medalie: ${medal}
+
+Daily: ${daily}`;
+
+      try{
+        if (navigator.share){
+          await navigator.share({ title: "Forest Memory – Valea Doftanei", text });
+        } else {
+          await navigator.clipboard.writeText(text);
+          alert("Am copiat mesajul în clipboard ✅");
+        }
+      } catch (err){
+        console.log(err);
+      }
+    }
+
+    // Daily card (deterministic by date)
+    function isoDate(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = pad2(d.getMonth()+1);
+      const day = pad2(d.getDate());
+      return `${y}-${m}-${day}`;
+    }
+    function dailyIndex(dateStr){
+      // deterministic "hash" simplu: YYYYMMDD -> mod
+      const n = Number(dateStr.replaceAll("-",""));
+      return n % DAILY.length;
+    }
+    function renderDaily(){
+      const ds = isoDate();
+      const i = dailyIndex(ds);
+      const item = DAILY[i];
+
+      dailyIconEl.textContent = item.icon;
+      dailyDateEl.textContent = ds;
+      dailyMsgEl.textContent = item.msg;
+    }
+    async function copyDaily(){
+      const text = `Valea Doftanei • Daily 🌲\n${dailyMsgEl.textContent.trim()}`;
+      try{
+        await navigator.clipboard.writeText(text);
+        alert("Daily card copiat ✅");
+      } catch {
+        alert(text);
+      }
+    }
+
+    // Photo album (local, compressed)
+    function loadAlbum(){
+      try{
+        const raw = localStorage.getItem(K.album);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch { return []; }
+    }
+    function saveAlbum(arr){
+      localStorage.setItem(K.album, JSON.stringify(arr));
+    }
+    function renderAlbum(){
+      const album = loadAlbum();
+      photoCountEl.textContent = String(album.length);
+
+      albumEl.innerHTML = "";
+      emptyAlbumEl.style.display = album.length ? "none" : "block";
+
+      album.forEach((p, idx) => {
+        const div = document.createElement("div");
+        div.className = "thumb";
+        div.innerHTML = `<img alt="photo" src="${p.data}" /><div class="x" title="Șterge">×</div>`;
+        div.addEventListener("click", (e) => {
+          const isX = e.target.classList.contains("x");
+          if (isX){
+            deletePhoto(idx);
+          } else {
+            openPhoto(p.data);
+          }
+        });
+        albumEl.appendChild(div);
+      });
+    }
+    function deletePhoto(idx){
+      const album = loadAlbum();
+      album.splice(idx, 1);
+      saveAlbum(album);
+      renderAlbum();
+    }
+    function clearAlbum(){
+      if (!confirm("Ștergi tot albumul local?")) return;
+      localStorage.removeItem(K.album);
+      renderAlbum();
+    }
+
+    function openPhoto(dataUrl){
+      previewImg.src = dataUrl;
+      modalPhoto.classList.add("open");
+      modalPhoto.setAttribute("aria-hidden", "false");
+    }
+    function closePhoto(){
+      modalPhoto.classList.remove("open");
+      modalPhoto.setAttribute("aria-hidden", "true");
+      previewImg.src = "";
+    }
+    function downloadCurrentPhoto(){
+      const src = previewImg.src;
+      if (!src) return;
+      const a = document.createElement("a");
+      a.href = src;
+      a.download = `valea-doftanei-${isoDate()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    async function compressToDataUrl(file, maxW=1080, quality=0.72){
+      // Read file -> image -> canvas resize -> jpeg dataUrl
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxW / bitmap.width);
+      const w = Math.round(bitmap.width * scale);
+      const h = Math.round(bitmap.height * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, w, h);
+
+      return canvas.toDataURL("image/jpeg", quality);
+    }
+
+    async function onPhotoPicked(file){
+      if (!file) return;
+
+      try{
+        const data = await compressToDataUrl(file);
+        const album = loadAlbum();
+
+        // keep last 12
+        album.unshift({ data, ts: Date.now() });
+        while (album.length > 12) album.pop();
+
+        saveAlbum(album);
+        renderAlbum();
+        beep(880, 0.06, "triangle", 0.03);
+      } catch (e){
+        console.log(e);
+        alert("Nu am putut procesa poza.");
+      }
+    }
+
+    // Modals
+    function openHow(){
+      modalHow.classList.add("open");
+      modalHow.setAttribute("aria-hidden", "false");
+    }
+    function closeHow(){
+      modalHow.classList.remove("open");
+      modalHow.setAttribute("aria-hidden", "true");
+    }
+
+    // Wire
+    function wire(){
+      boardEl.addEventListener("click", onTileClick);
+      btnNew.addEventListener("click", newGame);
+      btnHow.addEventListener("click", openHow);
+      btnCloseHow.addEventListener("click", closeHow);
+      btnShare.addEventListener("click", share);
+      btnResetBest.addEventListener("click", resetBest);
+
+      levelBtns.forEach(b => b.addEventListener("click", () => setDifficulty(b.dataset.difficulty)));
+
+      window.addEventListener("resize", setBoardColumns);
+
+      // close modals on backdrop click
+      modalHow.addEventListener("click", (e)=>{ if(e.target===modalHow) closeHow(); });
+      modalPhoto.addEventListener("click", (e)=>{ if(e.target===modalPhoto) closePhoto(); });
+
+      // Daily
+      btnDailyCopy.addEventListener("click", copyDaily);
+
+      // Sound toggle
+      soundToggle.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        localStorage.setItem(K.sound, soundEnabled ? "1" : "0");
+        renderSoundToggle();
+        if (soundEnabled) { ensureAudio(); beep(520, 0.06, "triangle", 0.03); }
+      });
+
+      // Photo
+      btnPhoto.addEventListener("click", () => {
+        ensureAudio();
+        photoInput.click();
+      });
+      photoInput.addEventListener("change", async () => {
+        const f = photoInput.files && photoInput.files[0];
+        photoInput.value = "";
+        await onPhotoPicked(f);
+      });
+      btnClearAlbum.addEventListener("click", clearAlbum);
+      btnClosePhoto.addEventListener("click", closePhoto);
+      btnDownloadImg.addEventListener("click", downloadCurrentPhoto);
+    }
+
+    (function init(){
+      renderDaily();
+      renderSoundToggle();
+      wire();
+      newGame();
+      renderAlbum();
+    })();
+  </script>
 </body>
 </html>
